@@ -1,0 +1,9 @@
+# Compiled executable
+/system_monitor
+
+# Object files
+*.o
+
+# Editor and OS files
+.DS_Store
+.vscode/
