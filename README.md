@@ -45,67 +45,34 @@ This project helped me understand basic C programming, structures, file handling
 
 The program reads Linux-specific virtual files under `/proc` and uses the POSIX `statvfs()` interface, so it is not intended to compile unchanged on Windows.
 
-## Build
 
-Clone the repository, enter its directory, and run:
-
-```bash
-make
-```
-
-Or compile directly:
-
-```bash
-gcc -std=c11 -Wall -Wextra -Wpedantic -O2 src/main.c -o system-monitor
-```
-
-## Run
-
-Monitor the filesystem containing `/`:
-
-```bash
-./system-monitor
-```
-
-Monitor the filesystem containing another path, such as `/home`:
-
-```bash
-./system-monitor /home
-```
-
-The program refreshes once per second. Press `Ctrl+C` to exit.
-
-> The path selects the filesystem containing that path. For example, `/home` may be on the same filesystem as `/` or on a separate mounted filesystem.
 
 ## How it works
 
-### CPU
+### CPU Usage
 
-Linux exposes aggregate CPU time counters in the first line of `/proc/stat`. The program takes an initial snapshot, waits for one interval, and takes another snapshot.
+The program reads CPU counters from `/proc/stat` twice, with a one-second interval between readings.
 
 Let:
 
-- \(\Delta T\) = change in the sum of the tracked CPU counters
-- \(\Delta I\) = change in idle time plus I/O-wait time
+- **ΔT** = change in the total CPU time
+- **ΔI** = change in idle time (including I/O wait)
 
-Then the reported utilization is:
+CPU usage is estimated as:
 
-\[
-\text{CPU usage (\%)} =
-100 \times \frac{\Delta T - \Delta I}{\Delta T}
-\]
+**CPU Usage (%) = 100 × (ΔT − ΔI) / ΔT**
 
-The result is an interval-based estimate, not an instantaneous measurement. Linux CPU counters are measured in scheduler ticks, not seconds.
+This is an interval-based estimate of CPU utilization, not an instantaneous measurement.
 
 ### Memory
 
 `/proc/meminfo` reports memory values in KiB. The program uses `MemTotal` and `MemAvailable`:
 
-\[
-\text{Used RAM} \approx \text{MemTotal} - \text{MemAvailable}
-\]
+The program reads `MemTotal` and `MemAvailable` from `/proc/meminfo`.
 
-`MemAvailable` is an estimate of memory available for new applications without swapping, so this definition is more useful for general monitoring than simply counting memory that is not marked idle.
+**Used RAM = Total RAM − Available RAM**
+
+`MemAvailable` estimates how much memory is available for new applications without swapping.
 
 ### Disk
 
@@ -113,13 +80,10 @@ The result is an interval-based estimate, not an instantaneous measurement. Linu
 
 ## Project structure
 
-
-linux-system-monitor/
-├── src/
-│   └── main.c
-├── Makefile
-├── .gitignore
-└── README.md
+Linux-System-Monitor/
+├── main.c
+├── README.md
+└── .gitignore
 
 
 ## Limitations
